@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社會標籤挑戰 - 誰是外傭？</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            background-size: 400% 400%;
+            animation: gradientFlow 4s ease infinite;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            background: white;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .timer {
+            font-size: 2.5em;
+            color: #e91e63;
+            font-weight: bold;
+            margin-bottom: 15px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .photo-card {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+        
+        .photo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .photo-card.selected {
+            border-color: #e91e63;
+            background: #fce4ec;
+        }
+        
+        .photo-card.revealed {
+            border-color: #ff9800;
+            background: #fff3e0;
+            animation: surpriseReveal 1s;
+        }
+        
+        @keyframes surpriseReveal {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.05); }
+            50% { transform: scale(0.98); }
+            75% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        
+        .photo-placeholder {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #ff9800, #ff5722);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .person-info {
+            font-size: 0.9em;
+            color: #333;
+        }
+        
+        .start-btn, .reveal-btn {
+            background: linear-gradient(45deg, #e91e63, #ad1457);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 15px;
+            transition: all 0.3s;
+        }
+        
+        .start-btn:hover, .reveal-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(233, 30, 99, 0.4);
+        }
+        
+        .result-panel {
+            background: linear-gradient(135deg, #f3e5f5, #e8f5e8);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #4caf50;
+            text-align: left;
+        }
+        
+        .stereotype-revealed {
+            background: linear-gradient(135deg, #fff3e0, #fce4ec);
+            border: 3px solid #ff9800;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .big-surprise {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 25px 0;
+            font-size: 1.3em;
+            animation: surpriseGlow 2s infinite alternate;
+        }
+        
+        @keyframes surpriseGlow {
+            from { box-shadow: 0 0 20px rgba(255, 107, 53, 0.5); }
+            to { box-shadow: 0 0 40px rgba(255, 107, 53, 0.8); }
+        }
+        
+        .hidden { display: none; }
+        
+        .score-display {
+            font-size: 1.5em;
+            color: #333;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 開始畫面 -->
+        <div id="start-screen">
+            <h1>🏷️ 社會標籤挑戰</h1>
+            <h2>誰是外傭？</h2>
+            
+            <div class="stereotype-revealed">
+                <h3>🎯 挑戰你的直覺</h3>
+                <p>你將看到8位菲律賓和印尼女性的簡介。</p>
+                <p><strong>請在60秒內，憑直覺選出你認為是「外傭」的人。</strong></p>
+                <p>選完後，我們會告訴你正確答案...</p>
+                <p>🤔 你的直覺準確嗎？</p>
+            </div>
+            
+            <button class="start-btn" onclick="startChallenge()">🚀 開始挑戰</button>
+        </div>
+        
+        <!-- 遊戲畫面 -->
+        <div id="game-screen" class="hidden">
+            <div class="timer" id="timer">60</div>
+            <div class="score-display">已選擇: <span id="selected-count">0</span> 人</div>
+            <p style="font-size: 1.2em; color: #666;">👆 點擊你認為是外傭的人</p>
+            
+            <div class="photos-grid" id="photos-grid"></div>
+            
+            <button class="reveal-btn" onclick="revealResults()" id="reveal-btn">揭曉答案</button>
+        </div>
+        
+        <!-- 結果畫面 -->
+        <div id="result-screen" class="hidden">
+            <div class="big-surprise">
+                <h2>🎉 答案揭曉！</h2>
+                <h3>她們全部都不是外傭！</h3>
+                <p>無論你選了誰，答案都是：<strong>零個外傭</strong>！</p>
+            </div>
+            
+            <div id="selection-analysis" class="score-display"></div>
+            
+            <div id="reveal-panel" class="result-panel"></div>
+            
+            <div class="stereotype-revealed">
+                <h3>🧠 社會學反思</h3>
+                <div id="sociology-analysis"></div>
+            </div>
+            
+            <button class="start-btn" onclick="restart()">🔄 重新挑戰</button>
+        </div>
+    </div>
+
+    <script>
+        let timeLeft = 60;
+        let selectedPeople = new Set();
+        let gameTimer = null;
+        let gameActive = false;
+        let currentPeopleOrder = [];
+        
+        // 人物資料 - 看起來很「普通」但全部都不是外傭！
+        const people = [
+            { 
+                name: "Maria", 
+                age: 32, 
+                country: "菲律賓", 
+                info: "中學畢業，在家照顧小孩", 
+                realJob: "網紅創業家",
+                education: "自學網路營銷", 
+                background: "YouTube頻道70萬訂閱，月收入港幣8萬元"
+            },
+            { 
+                name: "Siti", 
+                age: 28, 
+                country: "印尼", 
+                info: "住在村裡，家庭主婦", 
+                realJob: "線上小販老闆",
+                education: "中學程度", 
+                background: "經營網店，月賺3萬港幣，僱用12個員工"
+            },
+            { 
+                name: "Rosa", 
+                age: 25, 
+                country: "菲律賓", 
+                info: "年輕女性，找工作機會", 
+                realJob: "程式設計師",
+                education: "自學編程", 
+                background: "遠程工作，為美國公司開發手機App"
+            },
+            { 
+                name: "Dewi", 
+                age: 35, 
+                country: "印尼", 
+                info: "有工作經驗，勤勞能幹", 
+                realJob: "小工廠老闆娘",
+                education: "中學畢業", 
+                background: "經營成衣廠，員工30人，外銷到東南亞"
+            },
+            { 
+                name: "Lea", 
+                age: 29, 
+                country: "菲律賓", 
+                info: "喜歡唱歌，個性活潑", 
+                realJob: "酒吧駐唱歌手",
+                education: "自學音樂", 
+                background: "馬尼拉知名酒吧主力歌手，晚上演出收入豐厚"
+            },
+            { 
+                name: "Kartika", 
+                age: 31, 
+                country: "印尼", 
+                info: "做過各種工作，很有經驗", 
+                realJob: "美容院老闆",
+                education: "美容課程證書", 
+                background: "連鎖美容院3間分店，專做婚禮化妝"
+            },
+            { 
+                name: "Grace", 
+                age: 26, 
+                country: "菲律賓", 
+                info: "年輕有活力，想改善生活", 
+                realJob: "健身教練",
+                education: "體育相關證書", 
+                background: "私人健身教練，客戶包括當地藝人和商人"
+            },
+            { 
+                name: "Rini", 
+                age: 33, 
+                country: "印尼", 
+                info: "會做飯，擅長家務", 
+                realJob: "餐廳老闆娘",
+                education: "廚藝學校畢業", 
+                background: "開設印尼餐廳，在當地很受歡迎，準備開第二間分店"
+            }
+        ];
+        
+        function startChallenge() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            
+            gameActive = true;
+            timeLeft = 60;
+            selectedPeople.clear();
+            
+            // 打亂人物順序並儲存
+            currentPeopleOrder = [...people].sort(() => Math.random() - 0.5);
+            
+            // 創建人物卡片
+            const grid = document.getElementById('photos-grid');
+            grid.innerHTML = '';
+            
+            currentPeopleOrder.forEach((person, index) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                card.setAttribute('data-index', index);
+                card.onclick = function() { toggleSelection(index, this); };
+                
+                card.innerHTML = `
+                    <div class="photo-placeholder">
+                        👤<br>${person.name}
+                    </div>
+                    <div class="person-info">
+                        <strong>${person.name}</strong><br>
+                        年齡: ${person.age}<br>
+                        來自: ${person.country}<br>
+                        ${person.info}
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            // 開始倒計時
+            gameTimer = setInterval(function() {
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endChallenge();
+                }
+            }, 1000);
+            
+            updateDisplay();
+        }
+        
+        function toggleSelection(index, cardElement) {
+            if (!gameActive && timeLeft > 0) return;
+            
+            if (selectedPeople.has(index)) {
+                selectedPeople.delete(index);
+                cardElement.classList.remove('selected');
+            } else {
+                selectedPeople.add(index);
+                cardElement.classList.add('selected');
+            }
+            
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            document.getElementById('selected-count').textContent = selectedPeople.size;
+        }
+        
+        function endChallenge() {
+            gameActive = false;
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            updateDisplay();
+        }
+        
+        function revealResults() {
+            // 停止遊戲
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            gameActive = false;
+            
+            // 標記所有卡片為揭曉狀態
+            document.querySelectorAll('.photo-card').forEach(card => {
+                card.classList.add('revealed');
+            });
+            
+            setTimeout(() => {
+                // 切換到結果畫面
+                document.getElementById('game-screen').style.display = 'none';
+                document.getElementById('result-screen').style.display = 'block';
+                
+                // 分析選擇
+                const selectedCount = selectedPeople.size;
+                let selectionAnalysis;
+                
+                if (selectedCount === 0) {
+                    selectionAnalysis = '🤔 你沒有選擇任何人 - 很棒的直覺！或許你察覺到了什麼？';
+                } else if (selectedCount <= 2) {
+                    selectionAnalysis = `🧐 你選擇了 ${selectedCount} 位 - 什麼讓你覺得她們「像」外傭？`;
+                } else if (selectedCount <= 4) {
+                    selectionAnalysis = `🤷‍♀️ 你選擇了 ${selectedCount} 位 - 我們的判斷往往基於什麼印象呢？`;
+                } else {
+                    selectionAnalysis = `😅 你選擇了 ${selectedCount} 位 - 看來刻板印象真的很強烈！`;
+                }
+                
+                document.getElementById('selection-analysis').textContent = selectionAnalysis;
+                
+                // 揭示真相
+                let revealHTML = '<h4>📊 她們的真實身份：</h4>';
+                currentPeopleOrder.forEach(function(person, index) {
+                    const wasSelected = selectedPeople.has(index) ? ' ✓ (你選了她)' : '';
+                    
+                    revealHTML += `
+                        <div style="background: #f9f9f9; margin: 10px 0; padding: 15px; border-radius: 10px; border-left: 4px solid #ff9800;">
+                            <p><strong>👩‍💼 ${person.name}</strong> - ${person.realJob}${wasSelected}</p>
+                            <small>${person.background}</small>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('reveal-panel').innerHTML = revealHTML;
+                
+                // 社會學分析
+                const analysisHTML = `
+                    <h4>🎭 你的判斷可能基於什麼？</h4>
+                    <p><strong>常見的刻板印象包括：</strong></p>
+                    <ul style="text-align: left;">
+                        <li>🌏 <strong>國籍偏見：</strong> 「菲律賓/印尼女性 = 外傭」的錯誤等式</li>
+                        <li>📚 <strong>教育假設：</strong> 以為「中學畢業」= 只能做基層工作</li>
+                        <li>💰 <strong>經濟刻板印象：</strong> 認為這些國家的人都很窮要出國打工</li>
+                        <li>👀 <strong>外表偏見：</strong> 基於長相、年齡做職業判斷</li>
+                        <li>📺 <strong>媒體印象：</strong> 新聞只報導某些故事，形成單一印象</li>
+                    </ul>
+                    
+                    <h4>💡 重要真相：</h4>
+                    <p><strong>菲律賓和印尼其實有很多成功的女性：</strong></p>
+                    <ul style="text-align: left;">
+                        <li>🏢 許多人在自己國家有成功事業</li>
+                        <li>💻 網路經濟讓她們可以全球接案</li>
+                        <li>🎬 娛樂、創意產業發達</li>
+                        <li>🏪 小本創業、網路賣家很普遍</li>
+                        <li>💪 她們有自己的選擇和人生規劃</li>
+                    </ul>
+                    
+                    <h4>🧠 社會學啟示：</h4>
+                    <p><strong>「刻板印象」如何形成？</strong></p>
+                    <p>• 媒體只報導特定類型的故事</p>
+                    <p>• 我們容易把「部分」當成「全部」</p>
+                    <p>• 社會地位的偏見影響我們的判斷</p>
+                    <p>• <strong>每個人都是複雜的個體，不應該被單一標籤定義</strong></p>
+                    
+                    <h4>🤝 重要反思：</h4>
+                    <p><strong>外傭工作本身值得尊重</strong> - 但問題是：</p>
+                    <p>• 我們是否把國籍和職業綁定了？</p>
+                    <p>• 我們是否忽略了人們的多元可能性？</p>
+                    <p>• 如何用更開放的心態看待不同背景的人？</p>
+                `;
+                
+                document.getElementById('sociology-analysis').innerHTML = analysisHTML;
+            }, 1000);
+        }
+        
+        function restart() {
+            selectedPeople.clear();
+            currentPeopleOrder = [];
+            gameActive = false;
+            timeLeft = 60;
+            
+            if (gameTimer) {
+                clearInterval(gameTimer);
+                gameTimer = null;
+            }
+            
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
